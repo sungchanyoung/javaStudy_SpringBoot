@@ -3,7 +3,6 @@ package com.study.ecommerce.global.error;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.validation.AbstractBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
@@ -34,6 +33,8 @@ public class ErrorResponse {
         this.errors =  new ArrayList<>();
     }
 
+    //of: 팩토리메서드의 파라미터로 넘어온 값들을 검증하여 인스턴스를 생성할때 사용한다 -> DTO 객체 생성
+    //BindingResult -> Spring Validation에 의해 검증된 에러를 담는 객체
     public static ErrorResponse of(final ErrorCode code, final BindingResult bindingResult) {
         return new ErrorResponse(code, FieldError.of(bindingResult));
     }
@@ -41,15 +42,16 @@ public class ErrorResponse {
     public static ErrorResponse of(final ErrorCode code){
         return new ErrorResponse(code);
     }
-
+    
     public static ErrorResponse of(final ErrorCode code, final List<FieldError> errors) {
         return new ErrorResponse(code, errors);
     }
 
+    //MethodArgumentTypeMismatchException -> 메서드 인수 불균형 에러
     public static ErrorResponse of(MethodArgumentTypeMismatchException e){
         final String value = e.getValue() ==  null ? "" : e.getValue().toString();
-        final List<FieldError> errors = FieldError.of(e.getName(), value, e.getMessage());
-        return new ErrorResponse(ErrorCode.INVALID_TYPE_VALUE, errors);
+        final List<FieldError> errors = FieldError.of(e.getName(), value, e.getErrorCode());
+        return new ErrorResponse(ErrorCode.INVALID_TYPE_VALUE,  errors);
     }
 
     @Getter

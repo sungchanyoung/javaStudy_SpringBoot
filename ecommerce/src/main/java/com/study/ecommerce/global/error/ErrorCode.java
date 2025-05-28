@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
-    //Common
+    //Common -C001(C)클라이언트쪽 문제
     INVALID_INPUT_VALUE(400,"C001","Invalid Input Value"),
     INVALID_TYPE_VALUE(400,"C002","invalid type value"),
     ACCESS_DENIED(403,"C003","Access Denied"),
