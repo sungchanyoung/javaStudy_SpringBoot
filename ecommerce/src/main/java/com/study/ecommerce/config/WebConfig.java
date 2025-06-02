@@ -9,6 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    //포론트와 정상적인 api 통신을 하기위함
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")

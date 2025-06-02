@@ -28,6 +28,7 @@ public class CustomUserDetailService implements UserDetailsService {
         return new User(
                 member.getEmail(),
                 member.getPassword(),
+                //왜 이렇게 셋팅을 하냐
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()))
         );
 

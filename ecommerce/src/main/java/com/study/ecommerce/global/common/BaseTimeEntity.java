@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 public abstract class BaseTimeEntity {
     //각각 보일러 플레이트
     @CreatedDate
-    @Column(updatable = false)
+    @Column(updatable = false) //업데이트가 되면 안되는 엔티티
     private LocalDateTime createdAt; //created_at 컬럼명으로 설정 해야한다
 
     @LastModifiedDate //마지막으로 업데이트 된 시간을 가져온다

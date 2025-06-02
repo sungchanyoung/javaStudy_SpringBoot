@@ -55,7 +55,7 @@ public class SecurityConfig {
                 //로그인 폼 방식전에 JWT로 먼저 인증 수행
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class);
-
+        //h2db를 손쉽게 사용하기 위함
         http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
 
         return http.build();
@@ -67,7 +67,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
-        //authorization: JWT 토큰 전송할때 사용, content-type: JSON등 본문 데이터 형식 명시, x-auth-token:사용자 정의 헤더
+        //authorization: JWT 토큰 전송할때 사e용, content-type: JSON등 본문 데이터 형식 명시, x-auth-token:사용자 정의 헤더
         configuration.setAllowedHeaders(List.of("authorization", "content-type", "x-auth-token"));
 
         //서버 응답에서 브라우저가 접근 가능한 헤더 지정

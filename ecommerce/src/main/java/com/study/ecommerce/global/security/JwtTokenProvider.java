@@ -25,7 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-
     @Value("${jwt.secret}")
     private String secretKey;
 
