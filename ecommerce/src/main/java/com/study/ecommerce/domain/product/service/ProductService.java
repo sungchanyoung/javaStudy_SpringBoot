@@ -6,14 +6,23 @@ import com.study.ecommerce.domain.category.service.CategoryService;
 import com.study.ecommerce.domain.member.entity.Member;
 import com.study.ecommerce.domain.member.repository.MemberRepository;
 import com.study.ecommerce.domain.product.dto.req.ProductCreateRequest;
+import com.study.ecommerce.domain.product.dto.req.ProductSearchCondition;
 import com.study.ecommerce.domain.product.dto.req.ProductUpdateRequest;
 import com.study.ecommerce.domain.product.dto.resp.ProductResponse;
+import com.study.ecommerce.domain.product.dto.resp.ProductSummaryDto;
 import com.study.ecommerce.domain.product.entity.Product;
 import com.study.ecommerce.domain.product.repository.ProductRepository;
+import com.study.ecommerce.global.error.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +30,50 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final MemberRepository memberRepository;
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getProducts(ProductSearchCondition condition, Pageable pageable){
+       Page<ProductSummaryDto> productSummaryDtos = productRepository.searchProducts(condition, pageable);
+
+       List<Long> categoryIds = productSummaryDtos.getContent().stream()
+               .map(dto -> {
+               Product product  = productRepository.findById(dto.id())
+                           .orElseThrow(() -> new EntityNotFoundException("상품을 찾을수 없습니다"));
+                   return product.getCategoryId();
+               })
+               .filter(Objects::nonNull)
+               .distinct()
+               .toList();
+
+        Map<Long, String> categoryMap = new HashMap<>();
+
+        if(!categoryIds.isEmpty()){
+            List<Category> categories =categoryRepository.findAllById(categoryIds);
+            categories.forEach(category ->
+                    categoryMap.put(category.getId(), category.getName()));
+        }
+
+        return  productSummaryDtos.map(dto -> {
+            Product product = productRepository.findById(dto.id())
+                    .orElseThrow(() -> new EntityNotFoundException("상품을 찾을수 없습니다"));
+
+            String categoryName ="분류 없음";
+            if (product.getCategoryId() != null){
+                categoryName = categoryMap.getOrDefault(product.getCategoryId(), "분류없음");
+
+            }
+
+            return  new ProductResponse(
+                    dto.id(),
+                    dto.name(),
+                    null,
+                    dto.price(),
+                    dto.stockQuantity(),
+                    dto.status(),
+                    categoryName
+            );
+        });
+    }
 
     @Transactional
     public ProductResponse createProduct(ProductCreateRequest request, String email){
@@ -67,12 +120,22 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public ProductResponse getProductById(Long id){
+    public ProductResponse getProduct(Long id){
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을수 없습니다"));
 
-        Category category = categoryRepository.findById(product.getCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을수 없습니다"));
+        Category category = null;
+        String categoryName = "분류없음";
+
+        if(product.getCategoryId() != null){
+            category = categoryRepository.findById(product.getCategoryId())
+                    .orElse(null);
+
+            if (category != null){
+                categoryName = category.getName();
+            }
+
+        }
 
         return new ProductResponse(
                 product.getId(),
@@ -81,7 +144,7 @@ public class ProductService {
                 product.getPrice(),
                 product.getStockQuantity(),
                 product.getStatus(),
-                category.getName()
+                categoryName
         );
     }
 
@@ -95,7 +158,7 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("상품을 찾을수 없습니다"));
 
-        Member seller = memberRepository.findByEmail(email)
+        Member seller = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을수 없습니다"));
 
         if (!seller.getEmail().equals(email)){
