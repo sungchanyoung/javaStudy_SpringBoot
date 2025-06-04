@@ -77,6 +77,7 @@ public class ProductQueryRepositoryCustom  implements  ProductQueryRepository{
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .orderBy(getOrderSpecifier(pageable, product))
+                .distinct()
                 .fetch(); //단일 값은 fetone, fetch()LIst형태로 가져옴
 
         //실제 조회 쿼리
