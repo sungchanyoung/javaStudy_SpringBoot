@@ -73,7 +73,7 @@ public class ProductQueryRepositoryCustom  implements  ProductQueryRepository{
                         Expressions.asString("Category").as("categoryName"),
                         product.status))
                 .from(product)
-                .where(builder)
+                .where(builder, category.id.eq(product.categoryId))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .orderBy(getOrderSpecifier(pageable, product))
