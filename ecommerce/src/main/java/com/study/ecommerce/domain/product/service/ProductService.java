@@ -2,7 +2,6 @@ package com.study.ecommerce.domain.product.service;
 
 import com.study.ecommerce.domain.category.entity.Category;
 import com.study.ecommerce.domain.category.repository.CategoryRepository;
-import com.study.ecommerce.domain.category.service.CategoryService;
 import com.study.ecommerce.domain.member.entity.Member;
 import com.study.ecommerce.domain.member.repository.MemberRepository;
 import com.study.ecommerce.domain.product.dto.req.ProductCreateRequest;
@@ -35,44 +34,15 @@ public class ProductService {
     public Page<ProductResponse> getProducts(ProductSearchCondition condition, Pageable pageable){
        Page<ProductSummaryDto> productSummaryDtos = productRepository.searchProducts(condition, pageable);
 
-       List<Long> categoryIds = productSummaryDtos.getContent().stream()
-               .map(dto -> {
-               Product product  = productRepository.findById(dto.id())
-                           .orElseThrow(() -> new EntityNotFoundException("상품을 찾을수 없습니다"));
-                   return product.getCategoryId();
-               })
-               .filter(Objects::nonNull)
-               .distinct()
-               .toList();
-
-        Map<Long, String> categoryMap = new HashMap<>();
-
-        if(!categoryIds.isEmpty()){
-            List<Category> categories =categoryRepository.findAllById(categoryIds);
-            categories.forEach(category ->
-                    categoryMap.put(category.getId(), category.getName()));
-        }
-
-        return  productSummaryDtos.map(dto -> {
-            Product product = productRepository.findById(dto.id())
-                    .orElseThrow(() -> new EntityNotFoundException("상품을 찾을수 없습니다"));
-
-            String categoryName ="분류 없음";
-            if (product.getCategoryId() != null){
-                categoryName = categoryMap.getOrDefault(product.getCategoryId(), "분류없음");
-
-            }
-
-            return  new ProductResponse(
+            return productSummaryDtos.map(dto ->new ProductResponse(
                     dto.id(),
                     dto.name(),
                     null,
                     dto.price(),
                     dto.stockQuantity(),
                     dto.status(),
-                    categoryName
-            );
-        });
+                    dto.categoryName()
+            ));
     }
 
     @Transactional
