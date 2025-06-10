@@ -94,7 +94,7 @@ public class ProductQueryRepositoryCustom  implements  ProductQueryRepository{
                     product.name,
                     product.price,
                     product.stockQuantity,
-                    // coalesce :null일 경우에  뒷 값을 사용해줘| 양방향 관계를 최대한 지향한다
+                    // coalesce :null일 경우에  뒷 값을 사용해줘 |양방향 관계를 최대한 지향한다
                     category.name.coalesce("분류 없음").as("categoryName"),
                     product.status
 
@@ -126,7 +126,7 @@ public class ProductQueryRepositoryCustom  implements  ProductQueryRepository{
                         statusActive()
                 );
 
-
+        //PageableExecutionUtils.getPage -> 페이징 처리를 최적화 해주는 유틸리티 불필요한 제거 성능 향상 해준다.
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
     /**
@@ -139,7 +139,7 @@ public class ProductQueryRepositoryCustom  implements  ProductQueryRepository{
             return null;
         }
 
-        QProduct product =QProduct.product;
+        QProduct product = QProduct.product;
         return product.name.containsIgnoreCase(keyword)
                 .or(product.description.containsIgnoreCase(keyword));
     }
@@ -155,6 +155,12 @@ public class ProductQueryRepositoryCustom  implements  ProductQueryRepository{
     private BooleanExpression sellerIdEq(Long sellerId){
         return sellerId !=  null ? QProduct.product.sellerId.eq(sellerId) : null;
     }
+    /**
+     * 카테고리 ID 조건
+     * @param categoryId
+     * @return  BooleanExpression
+     * */
+
     private BooleanExpression categoryIdEq(Long categoryId){
         return categoryId !=  null ? QProduct.product.categoryId.eq(categoryId) : null;
     }
@@ -163,6 +169,7 @@ public class ProductQueryRepositoryCustom  implements  ProductQueryRepository{
         return QProduct.product.status.eq(Product.ProductStatus.ACTIVE);
     }
 
+    //BigDecimal은 Java 언어에서 숫자를 정밀하게 저장하고 표현할 수 있는 유일한 방법이다.
     private BooleanExpression priceBetween(BigDecimal minPrice, BigDecimal maxPrice){
         return priceGoe(minPrice).and(priceLoe(maxPrice));
     }
@@ -175,16 +182,11 @@ public class ProductQueryRepositoryCustom  implements  ProductQueryRepository{
     private OrderSpecifier<?> getOrderSpecifier(Pageable pageable, QProduct product) {
         if (!pageable.getSort().isEmpty()) {
             for (Sort.Order order : pageable.getSort()) {
-                switch (order.getProperty()) {
-                    case "price" :
-                        return order.isAscending() ? product.price.asc() : product.price.desc();
-
-                    case "createdAt":
-                        return order.isAscending() ? product.createdAt.asc() : product.createdAt.desc();
-
-                    default:
-                        return product.id.desc();
-                }
+                return switch (order.getProperty()) {
+                    case "price" -> order.isAscending() ? product.price.asc() : product.price.desc();
+                    case "createdAt" -> order.isAscending() ? product.createdAt.asc() : product.createdAt.desc();
+                    default -> product.id.desc();
+                };
             }
         }
 

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -65,12 +66,74 @@ public class CartServiceCustom implements CartService{
 
     @Override
     public CartItemResponse addCartItem(CartItemRequest request, String email) {
-        return null;
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+
+        Cart cart = cartRepository.findByMemberId(member.getId())
+                .orElseThrow(() -> new EntityNotFoundException("장바구니를 찾을 수 없습니다."));
+
+        Product product = productRepository.findById(request.productId())
+                .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다."));
+
+        Optional<CartItem> existingItemOpt = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId());
+
+        CartItem cartItem;
+        int updatedQuantity = 0;
+
+        if (existingItemOpt.isPresent()) {
+            cartItem = existingItemOpt.get();
+            updatedQuantity = cartItem.getQuantity() + request.quantity();
+            cartItem.updateQuantity(updatedQuantity);
+
+        } else {
+            cartItem = CartItem.builder()
+                    .cartId(cart.getId())
+                    .productId(request.productId())
+                    .quantity(request.quantity())
+                    .build();
+        }
+
+        Long totalPrice = product.getPrice() * updatedQuantity;
+        cartItemRepository.save(cartItem);
+
+        return  new CartItemResponse(
+                cartItem.getId(),
+                product.getId(),
+                product.getName(),
+                product.getPrice(),
+                updatedQuantity,
+                totalPrice
+        );
+
     }
 
     @Override
     public CartItemResponse updateCartItem(Long cartItemId, CartItemRequest request, String email) {
-        return null;
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new EntityNotFoundException("장바구니 항목을 찾을 수 없습니다."));
+
+        Cart cart = cartRepository.findByMemberId(member.getId())
+                .orElseThrow(() -> new EntityNotFoundException("장바구니를 찾을 수 없습니다."));
+
+        if (!cartItem.getCartId().equals(cart.getId())) {
+            throw new IllegalArgumentException("사용자의 장바구니 항목이 아닙니다.");
+        }
+
+        cartItem.updateQuantity(request.quantity());
+        cartItemRepository.save(cartItem);
+
+        return new CartItemResponse(
+                request.id(),
+                cartItem.getProductId(),
+                request.productName(),
+                request.price(),
+                request.quantity(),
+                request.totalPrice()
+        );
+
     }
 
     @Override
