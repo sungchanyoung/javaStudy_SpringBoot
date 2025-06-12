@@ -51,6 +51,7 @@ public class Product  extends BaseTimeEntity{
         this.categoryId = categoryId;
     }
 
+
     public enum ProductStatus{
        ACTIVE,SOLD_OUT, DELETED;
     }

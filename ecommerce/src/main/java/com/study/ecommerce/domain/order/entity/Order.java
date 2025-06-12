@@ -3,6 +3,7 @@ package com.study.ecommerce.domain.order.entity;
 import com.study.ecommerce.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,12 +28,15 @@ public class Order extends BaseTimeEntity {
 
     private Long totalAmount;
 
+    @Builder
     public Order(Long memberId, OrderStatus status, LocalDateTime orderDate, Long totalAmount) {
         this.memberId = memberId;
         this.status = status;
         this.orderDate = orderDate;
         this.totalAmount = totalAmount;
     }
+
+
 
     //비즈니스 메소드
     public void  updateStatus(OrderStatus status){

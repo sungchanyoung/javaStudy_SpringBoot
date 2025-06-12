@@ -3,6 +3,7 @@ package com.study.ecommerce.domain.order.entity;
 import com.study.ecommerce.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,6 +28,7 @@ public class OrderItem  extends BaseTimeEntity {
     @Column(nullable = false)
     private Long price;
 
+    @Builder
     public OrderItem(Long orderId, Long productId, Integer quantity, Long price) {
         this.orderId = orderId;
         this.productId = productId;

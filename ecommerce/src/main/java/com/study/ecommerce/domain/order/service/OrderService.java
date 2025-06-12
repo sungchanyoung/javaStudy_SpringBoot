@@ -4,8 +4,7 @@ import com.study.ecommerce.domain.order.dto.OrderCreateRequest;
 import com.study.ecommerce.domain.order.dto.OrderDetailResponse;
 import com.study.ecommerce.domain.order.dto.OrderResponse;
 import org.springframework.data.domain.Page;
-
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 
 public interface OrderService {
     OrderResponse createOrder(OrderCreateRequest request, String email);

@@ -12,7 +12,7 @@ import java.util.List;
 public record OrderCreateRequest(
         List<Long> cartItemIds,
         @Valid
-        List<OrderItemRequset> items,
+        List<OrderItemRequest> items,
 
         @NotNull
         Boolean payNow,
@@ -22,7 +22,7 @@ public record OrderCreateRequest(
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static  class  OrderItemRequset{
+    public static class OrderItemRequest{
         @NotNull
         private Long productId;
 
