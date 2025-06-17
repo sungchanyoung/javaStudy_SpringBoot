@@ -34,9 +34,11 @@ import java.util.List;
 
 import static com.study.ecommerce.domain.order.entity.Order.OrderStatus.CANCELED;
 import static com.study.ecommerce.domain.order.entity.Order.OrderStatus.CREATED;
+
 @Service
 @RequiredArgsConstructor
 public class OrderServiceCustom implements OrderService{
+
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final MemberRepository memberRepository;
@@ -94,9 +96,10 @@ public class OrderServiceCustom implements OrderService{
         return new OrderResponse(order.getId(), order.getStatus(), order.getTotalAmount());
     }
 
-
     @Override
+    @Transactional
     public OrderResponse cancelOrder(Long orderId, String email) {
+
         //주문 조회
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("주문을 찾을수 없습니다" + orderId));
@@ -105,30 +108,45 @@ public class OrderServiceCustom implements OrderService{
         Member member = memberRepository.findById(order.getMemberId())
                 .orElseThrow(() -> new EntityNotFoundException("회원을 찾을수 없습니다"));
 
+        //이어가는 스트림이 있을수도 있고 , 끊어가는 스트림이 있을수도 있고
         if (!member.getEmail().equals(email)){
-            throw new IllegalArgumentException("주문 취소 할수 없습니다");
+            throw new IllegalArgumentException("주문 취소할 권하이 없습니다");
         }
 
         //주문 상태 확인
-        if (order.getStatus() == OrderStatus.CANCELED) {
-            throw new IllegalStateException("이미 취소된 주문입니다.");
+//        if (order.getStatus() == OrderStatus.CANCELED) {
+//            throw new IllegalStateException("이미 취소된 주문입니다.");
+//       }
+
+        if(order.getStatus() == OrderStatus.DELVERD ||  order.getStatus() == OrderStatus.SHIPPING ){
+            throw new IllegalArgumentException("배송중이거나 배송이 완료된 주문은 취소 할수 없습니다");
         }
 
         //결제 취소 -결제가 완료된 경우
-        if (order.getStatus() == OrderStatus.PAID) {
-            orderRepository.delete(order);
-        }
+//        if (order.getStatus() == OrderStatus.PAID) {
+//            orderRepository.delete(order);
+//        }
+        if (order.getStatus() == OrderStatus.PAID){
+            Payment payment = paymentRepository.findByOrderId(order.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("결제 정보를 찾을수 없습니다"));
 
-        // 재고 원복
-        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
-        for (OrderItem orderItem : orderItems){
-            Product product = productRepository.findById(orderItem.getProductId())
-                    .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다"));
-            product.increaseStockQuantity(orderItem.getQuantity());
+            mockPaymentService.cancelPayment(payment);
+            List<OrderItem> orderItems = orderItemRepository.findByOrderId(order.getId());
+
+            // 재고 원복
+            for (OrderItem orderItem : orderItems ){
+                Product product = productRepository.findById(orderItem.getProductId())
+                        .orElseThrow(() -> new EntityNotFoundException("상품을 찾을수 없습니다"));
+
+                product.increaseStockQuantity(orderItem.getQuantity());
+                productRepository.save(product);// 상관없음
+
+            }
         }
 
         // 주문 상태를 변경
         order.updateStatus(CANCELED);
+        orderRepository.save(order);
 
         return new OrderResponse(
                 order.getId(),
@@ -192,7 +210,6 @@ public class OrderServiceCustom implements OrderService{
         ));
 
     }
-
 
     private long processCartItems(Order order, List<Long> cartItemIds, Member member) {
         Cart cart = cartRepository.findByMemberId(member.getId())

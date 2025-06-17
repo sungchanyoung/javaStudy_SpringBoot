@@ -49,7 +49,7 @@ public class Order extends BaseTimeEntity {
 
 
     public enum OrderStatus{
-        CREATED, PAID, CANCELED, DELVERD
+        CREATED, PAID, CANCELED, DELVERD,SHIPPING
 
     }
 }

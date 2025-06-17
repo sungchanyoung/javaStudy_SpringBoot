@@ -33,6 +33,10 @@ dependencies {
 	// database
 	implementation("org.flywaydb:flyway-core")
 	runtimeOnly("com.h2database:h2")
+	runtimeOnly("com.mysql:mysql-connector-j")
+	runtimeOnly("org.postgresql:postgresql")
+	implementation("org.flywaydb:flyway-mysql")
+	implementation("org.flywaydb:flyway-database-postgresql")
 
 	// swagger
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8")
@@ -42,6 +46,7 @@ dependencies {
 	implementation("io.jsonwebtoken:jjwt-impl:0.11.5")
 	implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
+	// Querydsl
 	implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
 	annotationProcessor("com.querydsl:querydsl-apt:5.0.0:jakarta")
 	annotationProcessor("jakarta.annotation:jakarta.annotation-api")
@@ -56,21 +61,22 @@ dependencies {
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
-val querydslGenerateDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
+
+val querydslGeneratedDir = layout.buildDirectory.dir("generated/querydsl").get().asFile
 
 tasks.withType<JavaCompile>().configureEach {
-	options.generatedSourceOutputDirectory.set(file(querydslGenerateDir))
+	options.generatedSourceOutputDirectory.set(file(querydslGeneratedDir))
 }
 
-sourceSets{
-	main{
-		java.srcDirs(querydslGenerateDir)
+sourceSets {
+	main {
+		java.srcDir(querydslGeneratedDir)
 	}
 }
 
-tasks.named("clean"){
-	doLast{
-		file(querydslGenerateDir).deleteRecursively()
+tasks.named("clean") {
+	doLast {
+		file(querydslGeneratedDir).deleteRecursively()
 	}
 }
 
