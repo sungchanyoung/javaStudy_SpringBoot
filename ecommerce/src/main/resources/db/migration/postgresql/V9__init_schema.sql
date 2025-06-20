@@ -1,3 +1,4 @@
+-- 초기 스키마 생성 (PostgreSQL 버전)
 CREATE TABLE member (
                         id BIGSERIAL PRIMARY KEY,
                         email VARCHAR(255) NOT NULL UNIQUE,

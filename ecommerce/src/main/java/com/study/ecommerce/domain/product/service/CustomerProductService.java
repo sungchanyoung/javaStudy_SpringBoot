@@ -35,7 +35,6 @@ public class CustomerProductService {
      */
 
     public List<ProductResponse> getActiveProductByCategory(Long categoryId){
-
         //카테고리의 존재 유무
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new EntityNotFoundException("존재하는 카테고리 없음"));
@@ -63,7 +62,7 @@ public class CustomerProductService {
         Page<Product> products = productRepository.findByStatus(ACTIVE, pageable);
 
         //물건이 비워 있으면 카테고리는 분류 없음 나머지는 물건의 기본 정보 가져오기
-        if (products.isEmpty()){
+        if (products.isEmpty()){ //product를 empty를 하면
             return products.map(product -> new ProductResponse(
                     product.getId(),
                     product.getName(),
@@ -75,8 +74,8 @@ public class CustomerProductService {
             ));
         }
 
-        //카테고리를 조회 효율적으로 조회를 하기 위해서 저는 맵생성
-        List<Long> categoryIds =products.getContent().stream()
+        //카테고리 정보 조회 효율적으로 조회를 하기 위해서 -맵 생성
+        List<Long> categoryIds = products.getContent().stream()
                 .map(Product::getCategoryId)
                 .filter(Objects::nonNull)
                 .distinct()
@@ -137,6 +136,7 @@ public class CustomerProductService {
                 categoryName
         );
     }
+
     /**
      * 상품명으로 판매중인 상품을 검색
      * Page<ProductResponse> param Pageable String keyword
@@ -144,7 +144,7 @@ public class CustomerProductService {
     public Page<ProductResponse> getActiveProduct(Pageable pageable, String keyword){
 
         //키워드 글자에 대한 조건 검사
-        if (keyword == null || keyword.isBlank() || keyword.trim().length() >1) {
+        if (keyword == null || keyword.isBlank() || keyword.trim().length() < 2) {
             throw new IllegalArgumentException("검색어는 두 글자 이상 입력해주세요.");
         }
 
@@ -214,9 +214,30 @@ public class CustomerProductService {
      */
     public ProductResponse getCategoryProduct(Long categoryId, String keyword){
         //카테고리 전제 유무
-        //키워드가 존재 유무
-        // category에서 상품명 찾기 == keyword로 확인
-        //
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() ->  new EntityNotFoundException("존재 하지 않은 카테고리 입니다"));
+
+        //키워드 글자에 대한 조건 검사 + 추가로 정규식을 입력
+        if (keyword == null || keyword.isBlank() ){
+            throw  new EntityNotFoundException("존재하지는 상품이 없습니다" +keyword);
+        }
+        if ( keyword.trim().length() < 2) {
+            throw new IllegalArgumentException("검색어는 두 글자 이상 입력해주세요.");
+        }
+
+        Product product = productRepository
+                .findByCategoryAndNameContainingAndStatus(category, keyword.trim(), ACTIVE)
+                .orElseThrow(() -> new EntityNotFoundException("해당 조건에 맞는 상품이 없습니다."));
+
+        return new ProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStockQuantity(),
+                product.getStatus(),
+                category.getName()
+        );
     }
 
     /**
@@ -224,4 +245,6 @@ public class CustomerProductService {
      *  Product Page를 ProductResponse의 Page 변환하는 공통 메소드 구현
      *  Page<Product> -> Page<ProductResponse>
      */
+
+
 }
