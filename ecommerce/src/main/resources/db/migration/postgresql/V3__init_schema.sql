@@ -1,6 +1,6 @@
 -- 초기 스키마 생성 (PostgreSQL 버전)
 CREATE TABLE member (
-                        id BIGSERIAL PRIMARY KEY,
+                        id BIG SERIAL PRIMARY KEY,
                         email VARCHAR(255) NOT NULL UNIQUE,
                         password VARCHAR(255) NOT NULL,
                         name VARCHAR(255) NOT NULL,
