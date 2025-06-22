@@ -29,14 +29,16 @@ public interface ProductRepository extends JpaRepository<Product, Long>, Product
 
     Optional<Product> findByIdAndStatus(Long id, ProductStatus productStatus);
 
-    Page<Product> findByStatusAndNameContain(ProductStatus productStatus, String keyword, Pageable pageable);
+    @Query("SELECT p FROM Product p WHERE p.status = :status AND LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+    Page<Product> findByStatusAndNameLikeIgnoreCase(
+            @Param("status") Product.ProductStatus status, @Param("name") String name, Pageable pageable);
 
-    @Query("select p from Product p where p.price bewtween : minPrice and :maxPrice and p.status = 'ACTIVE'")
+//    @Query("select p from Product p where p.price bewtween : minPrice and :maxPrice and p.status = 'ACTIVE'")
     List<Product> findPriceBetweenProduct(@Param("minPrice") Long minPrice, @Param("maxPrice") Long maxPrice);
 
-    @Query("select p from Product p where p.category = :category and p.name like %:keyword:% and p.status = :status")
+//    @Query("select p from Product p where p.category_id =: categoryId and p.name like %:keyword:% and p.status = :status")
     Optional<Product> findByCategoryAndNameContainingAndStatus(
-            @Param("category") Category category,
+            @Param("categoryId") Long categoryId,
             @Param("keyword") String keyword,
             @Param("status") ProductStatus status
     );

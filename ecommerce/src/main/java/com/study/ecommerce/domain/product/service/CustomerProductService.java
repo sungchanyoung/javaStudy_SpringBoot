@@ -149,7 +149,7 @@ public class CustomerProductService {
         }
 
         // 판매중이며 상품명에 키워드가 포함된 상품 검색
-        Page<Product> products = productRepository.findByStatusAndNameContain(
+        Page<Product> products = productRepository.findByStatusAndNameLikeIgnoreCase(
                 ACTIVE, keyword.trim(), pageable
         );
 
@@ -226,7 +226,7 @@ public class CustomerProductService {
         }
 
         Product product = productRepository
-                .findByCategoryAndNameContainingAndStatus(category, keyword.trim(), ACTIVE)
+                .findByCategoryAndNameContainingAndStatus(categoryId, keyword.trim(), ACTIVE)
                 .orElseThrow(() -> new EntityNotFoundException("해당 조건에 맞는 상품이 없습니다."));
 
         return new ProductResponse(
